@@ -59,7 +59,7 @@ if not vim.loop.fs_stat(lazypath) then
   }
 end
 vim.opt.rtp:prepend(lazypath)
-
+vim.opt.relativenumber = true
 -- [[ Configure plugins ]]
 -- NOTE: Here is where you install your plugins.
 --  You can configure plugins using the `config` key.
@@ -228,6 +228,10 @@ require('lazy').setup({
     build = ':TSUpdate',
   },
 
+  {'mfussenegger/nvim-dap'},
+  {'mfussenegger/nvim-dap-python'},
+  { "rcarriga/nvim-dap-ui", requires = {"mfussenegger/nvim-dap"} }
+
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
   --       Uncomment any of the lines below to enable them.
@@ -243,6 +247,22 @@ require('lazy').setup({
   -- { import = 'custom.plugins' },
 }, {})
 
+-- DEBUGGER:
+
+require('dap-python').setup('~/.virtualenvs/debugpy/bin/python')
+require('dap-python').test_runner = 'pytest'
+local dap, dapui =require("dap"),require("dapui")
+dap.listeners.after.event_initialized["dapui_config"]=function()
+  dapui.open()
+end
+dap.listeners.before.event_terminated["dapui_config"]=function()
+  dapui.close()
+end
+dap.listeners.before.event_exited["dapui_config"]=function()
+  dapui.close()
+end
+vim.fn.sign_define('DapBreakpoint',{ text ='🟥', texthl ='', linehl ='', numhl =''})
+vim.fn.sign_define('DapStopped',{ text ='▶️', texthl ='', linehl ='', numhl =''})
 -- [[ Setting options ]]
 -- See `:help vim.o`
 -- NOTE: You can change these options as you wish!
@@ -614,6 +634,9 @@ cmp.setup {
     { name = 'luasnip' },
   },
 }
+
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
