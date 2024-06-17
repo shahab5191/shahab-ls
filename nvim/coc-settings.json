@@ -1,0 +1,7 @@
+{
+  "python.linting.mypyEnabled": true,
+  "python.linting.mypyArgs": [
+    "--config-file", "./mypy.ini"
+  ],
+  "python.linting.enabled": true
+}

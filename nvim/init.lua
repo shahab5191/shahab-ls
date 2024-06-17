@@ -95,6 +95,7 @@ require('lazy').setup({
     },
   },
 
+  --[[
   {
     -- Autocompletion
     'hrsh7th/nvim-cmp',
@@ -110,9 +111,9 @@ require('lazy').setup({
       'rafamadriz/friendly-snippets',
     },
   },
-
+]]--
   -- Useful plugin to show you pending keybinds.
-  { 'folke/which-key.nvim', opts = {} },
+  { 'folke/which-key.nvim',  opts = {} },
   {
     -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
@@ -155,12 +156,12 @@ require('lazy').setup({
   {
     -- Theme inspired by Atom
     'navarasu/onedark.nvim',
-    opts={
+    opts = {
       transparent = true,
       styles = {
-           sidebars = "transparent",
-           floats = "transparent",
-        },
+        sidebars = "transparent",
+        floats = "transparent",
+      },
     },
     priority = 1000,
     config = function()
@@ -191,9 +192,9 @@ require('lazy').setup({
     main = 'ibl',
     opts = {},
   },
-  
+
   {
-    'xiyaowong/transparent.nvim', opts={},
+    'xiyaowong/transparent.nvim', opts = {},
   },
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
@@ -222,16 +223,85 @@ require('lazy').setup({
   {
     -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
+    run = ":TSUpdate",
+    config = function()
+      require 'nvim-treesitter.configs'.setup {
+        ensure_installed = { "markdown", "python", "json" },
+        highlight = {
+          enable = true,
+        },
+      }
+    end,
     dependencies = {
       'nvim-treesitter/nvim-treesitter-textobjects',
     },
     build = ':TSUpdate',
   },
 
-  {'mfussenegger/nvim-dap'},
-  {'mfussenegger/nvim-dap-python'},
-  { "rcarriga/nvim-dap-ui", requires = {"mfussenegger/nvim-dap"} }
+  { 'mfussenegger/nvim-dap' },
+  { 'mfussenegger/nvim-dap-python' },
+  {
+    'nvim-neotest/nvim-nio',
+    config = function()
+      -- Optional: add any specific configuration for nvim-nio here
+    end
+  },
+  {
+    "rcarriga/nvim-dap-ui",
+    requires = { "mfussenegger/nvim-dap" }
+  },
+  { 'puremourning/vimspector' },
+  { 'HiPhish/debugpy.nvim' },
+  { 'nvim-telescope/telescope-dap.nvim' },
+  { 'windwp/nvim-ts-autotag' },
+  { 'nvim-tree/nvim-tree.lua' },
+  { 'm4xshen/autoclose.nvim' },
+  { 'windwp/nvim-autopairs' },
+  { 'xiyaowong/transparent.nvim' },
+  {
+    'kevinhwang91/nvim-ufo',
+    dependencies = 'kevinhwang91/promise-async',
+    config = function ()
+      require('ufo').setup()
+    end
+  },
+  {
+    "neoclide/coc.nvim",
+    branch = "release",
+    config = function()
+      -- coc.nvim configuration
+      vim.cmd [[
+        " Enable completion
+        inoremap <silent><expr> <TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
+        inoremap <silent><expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
+        " Use K to show documentation in preview window
+        nnoremap <silent> K :call CocActionAsync('doHover')<CR>
+
+        " Automatically trigger completion
+        autocmd CursorHold * silent call CocActionAsync('highlight')
+
+        " Remap keys for applying code actions
+        nmap <leader>ac  <Plug>(coc-codeaction)
+        nmap <leader>qf  <Plug>(coc-fix-current)
+
+        " Remap keys for navigate diagnostics
+        nmap <leader>dn  <Plug>(coc-diagnostic-next)
+        nmap <leader>dp  <Plug>(coc-diagnostic-prev)
+
+        " Go to defeniton"
+        nmap gd :call CocActionAsync('jumpDefinition')<CR>
+      ]]
+    end
+  },
+  --  {
+  --    'ray-x/lsp_signature.nvim',
+  --    event = "VeryLazy",
+  --    opts = {},
+  --    config = function(_, opts) require 'lsp_signature'.setup(opts) end
+  --  },
+  { 'ray-x/web-tools.nvim' },
+  { 'prettier/vim-prettier' }
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
   --       Uncomment any of the lines below to enable them.
@@ -247,25 +317,68 @@ require('lazy').setup({
   -- { import = 'custom.plugins' },
 }, {})
 
--- DEBUGGER:
+-- web-tools -- html server
+require 'web-tools'.setup({
+  keymaps = {
+    rename = nil,         -- by default use same setup of lspconfig
+    repeat_rename = '.',  -- . to repeat
+  },
+  hurl = {                -- hurl default
+    show_headers = false, -- do not show http headers
+    floating = false,     -- use floating windows (need guihua.lua)
+    json5 = false,        -- use json5 parser require json5 treesitter
+    formatters = {        -- format the result by filetype
+      json = { 'jq' },
+      html = { 'prettier', '--parser', 'html' },
+    },
+  },
+})
 
-require('dap-python').setup('~/.virtualenvs/debugpy/bin/python')
-require('dap-python').test_runner = 'pytest'
-local dap, dapui =require("dap"),require("dapui")
-dap.listeners.after.event_initialized["dapui_config"]=function()
-  dapui.open()
-end
-dap.listeners.before.event_terminated["dapui_config"]=function()
-  dapui.close()
-end
-dap.listeners.before.event_exited["dapui_config"]=function()
-  dapui.close()
-end
-vim.fn.sign_define('DapBreakpoint',{ text ='🟥', texthl ='', linehl ='', numhl =''})
-vim.fn.sign_define('DapStopped',{ text ='▶️', texthl ='', linehl ='', numhl =''})
+-- auto tag
+require('nvim-ts-autotag').setup()
+
+-- autoclose
+require('autoclose').setup()
+
+-- autopairs
+require('nvim-autopairs').setup()
+
+-- lsp-signature
+-- require "lsp_signature".setup()
+
+-- DEBUGGER:
+require('dap-python').setup('~/Work/audeering/.venv/bin/python')
+table.insert(require('dap').configurations.python, {
+  type = 'python',
+  request = 'launch',
+  name = 'launch File',
+  program = '${file}',
+  console = 'externalTerminal',
+  -- ... more options, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
+})
+local dapui = require('dapui')
+dapui.setup()
+
+vim.api.nvim_set_keymap('n', '<F5>', '<cmd>lua require("dap").continue()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<F10>', '<cmd>lua require("dap").step_over()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<F11>', '<cmd>lua require("dap").step_into()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<F12>', '<cmd>lua require("dap").step_out()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>b', '<cmd>lua require("dap").toggle_breakpoint()<CR>',
+  { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>B',
+  '<cmd>lua require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>lp',
+  '<cmd>lua require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: "))<CR>',
+  { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>dr', '<cmd>lua require("dap").repl.open()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>dl', '<cmd>lua require("dap").run_last()<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>dt', '<cmd>lua require("dapui").toggle()<CR>', { silent = true })
 -- [[ Setting options ]]
 -- See `:help vim.o`
 -- NOTE: You can change these options as you wish!
+
+-- Mapping for pyright typecheck
+vim.api.nvim_set_keymap('n', '<leader>t', ':CocCommand pyright.organizeimports<CR>', { noremap = true, silent = true })
 
 -- Set highlight on search
 vim.o.hlsearch = false
@@ -286,6 +399,13 @@ vim.o.breakindent = true
 
 -- Save undo history
 vim.o.undofile = true
+
+-- Coc Mapping
+vim.api.nvim_set_keymap('i', '<CR>', 'pumvisible() ? "\\<C-y>" : "\\<CR>"', {
+  expr = true,
+  noremap = true,
+  silent = true
+})
 
 -- Case-insensitive searching UNLESS \C or capital in search
 vim.o.ignorecase = true
@@ -319,6 +439,28 @@ vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous dia
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostics list' })
+
+-- nvim-ufo config
+
+vim.o.foldcolumn = '1' -- '0' is not bad
+vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
+vim.o.foldlevelstart = 99
+vim.o.foldenable = true
+
+-- Using ufo provider need remap `zR` and `zM`. If Neovim is 0.6.1, remap yourself
+vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
+vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
+
+-- Option 3: treesitter as a main provider instead
+-- (Note: the `nvim-treesitter` plugin is *not* needed.)
+-- ufo uses the same query files for folding (queries/<lang>/folds.scm)
+-- performance and stability are better than `foldmethod=nvim_treesitter#foldexpr()`
+require('ufo').setup({
+    provider_selector = function(bufnr, filetype, buftype)
+        return {'treesitter', 'indent'}
+    end
+})
+--
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
@@ -376,7 +518,7 @@ local function live_grep_git_root()
   local git_root = find_git_root()
   if git_root then
     require('telescope.builtin').live_grep({
-      search_dirs = {git_root},
+      search_dirs = { git_root },
     })
   end
 end
@@ -562,10 +704,11 @@ local servers = {
 -- Setup neovim lua configuration
 require('neodev').setup()
 
+--[[
 -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
-
+]]--
 -- Ensure the servers above are installed
 local mason_lspconfig = require 'mason-lspconfig'
 
@@ -586,11 +729,12 @@ mason_lspconfig.setup_handlers {
 
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
+--[[
+
 local cmp = require 'cmp'
 local luasnip = require 'luasnip'
 require('luasnip.loaders.from_vscode').lazy_load()
 luasnip.config.setup {}
-
 cmp.setup {
   snippet = {
     expand = function(args)
@@ -634,7 +778,7 @@ cmp.setup {
     { name = 'luasnip' },
   },
 }
-
+]]--
 vim.opt.foldmethod = "expr"
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 
