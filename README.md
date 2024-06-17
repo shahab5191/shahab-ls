@@ -1,1 +1,1 @@
-Shahab linux settings
+my I3 - nvim conifgs
