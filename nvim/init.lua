@@ -73,9 +73,6 @@ require('lazy').setup({
   'tpope/vim-fugitive',
   'tpope/vim-rhubarb',
 
-  -- Detect tabstop and shiftwidth automatically
-  'tpope/vim-sleuth',
-
   -- NOTE: This is where your plugins related to LSP can be installed.
   --  The configuration is done below. Search for lspconfig to find it below.
   {
@@ -301,7 +298,14 @@ require('lazy').setup({
   --    config = function(_, opts) require 'lsp_signature'.setup(opts) end
   --  },
   { 'ray-x/web-tools.nvim' },
-  { 'prettier/vim-prettier' }
+  { 'prettier/vim-prettier' },
+  {
+    'stevearc/oil.nvim',
+    opts = {},
+    -- Optional dependencies
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+  },
+  {'VonHeikemen/lsp-zero.nvim', branch = 'v3.x'}
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
   --       Uncomment any of the lines below to enable them.
@@ -343,6 +347,10 @@ require('autoclose').setup()
 -- autopairs
 require('nvim-autopairs').setup()
 
+-- oil file explorer
+require("oil").setup()
+vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
+
 -- lsp-signature
 -- require "lsp_signature".setup()
 
@@ -379,6 +387,15 @@ vim.keymap.set('n', '<leader>dt', '<cmd>lua require("dapui").toggle()<CR>', { si
 
 -- Mapping for pyright typecheck
 vim.api.nvim_set_keymap('n', '<leader>t', ':CocCommand pyright.organizeimports<CR>', { noremap = true, silent = true })
+
+-- lsp zero
+local lsp_zero = require('lsp-zero')
+
+lsp_zero.on_attach(function(client, bufnr)
+  -- see :help lsp-zero-keybindings
+  -- to learn the available actions
+  lsp_zero.default_keymaps({buffer = bufnr})
+end)
 
 -- Set highlight on search
 vim.o.hlsearch = false
@@ -450,6 +467,14 @@ vim.o.foldenable = true
 -- Using ufo provider need remap `zR` and `zM`. If Neovim is 0.6.1, remap yourself
 vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
 vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
+
+-- tab size to 4
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.expandtab = true
+vim.opt.softtabstop = 4
+vim.opt.autoindent = true
+vim.opt.smartindent = true
 
 -- Option 3: treesitter as a main provider instead
 -- (Note: the `nvim-treesitter` plugin is *not* needed.)
