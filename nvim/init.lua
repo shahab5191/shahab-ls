@@ -73,9 +73,6 @@ require('lazy').setup({
   'tpope/vim-fugitive',
   'tpope/vim-rhubarb',
 
-  -- Detect tabstop and shiftwidth automatically
-  'tpope/vim-sleuth',
-
   -- NOTE: This is where your plugins related to LSP can be installed.
   --  The configuration is done below. Search for lspconfig to find it below.
   {
@@ -95,7 +92,6 @@ require('lazy').setup({
     },
   },
 
-  --[[
   {
     -- Autocompletion
     'hrsh7th/nvim-cmp',
@@ -111,7 +107,6 @@ require('lazy').setup({
       'rafamadriz/friendly-snippets',
     },
   },
-]]--
   -- Useful plugin to show you pending keybinds.
   { 'folke/which-key.nvim',  opts = {} },
   {
@@ -258,6 +253,7 @@ require('lazy').setup({
   { 'm4xshen/autoclose.nvim' },
   { 'windwp/nvim-autopairs' },
   { 'xiyaowong/transparent.nvim' },
+  { 'onsails/lspkind.nvim' },
   {
     'kevinhwang91/nvim-ufo',
     dependencies = 'kevinhwang91/promise-async',
@@ -265,6 +261,26 @@ require('lazy').setup({
       require('ufo').setup()
     end
   },
+  { 'hrsh7th/cmp-nvim-lsp-signature-help' },
+  {
+    'kristijanhusak/vim-dadbod-ui',
+    dependencies = {
+      { 'tpope/vim-dadbod', lazy = true },
+      { 'kristijanhusak/vim-dadbod-completion', ft = { 'sql', 'mysql', 'plsql' }, lazy = true },
+    },
+    cmd = {
+      'DBUI',
+      'DBUIToggle',
+      'DBUIAddConnection',
+      'DBUIFindBuffer',
+    },
+    init = function()
+      -- Your DBUI configuration
+      vim.g.db_ui_use_nerd_fonts = 1
+    end,
+  },
+  { 'hrsh7th/cmp-buffer'},
+  --[[
   {
     "neoclide/coc.nvim",
     branch = "release",
@@ -292,16 +308,31 @@ require('lazy').setup({
         " Go to defeniton"
         nmap gd :call CocActionAsync('jumpDefinition')<CR>
       ]]
-    end
-  },
+    --end
+  --},
   --  {
   --    'ray-x/lsp_signature.nvim',
   --    event = "VeryLazy",
   --    opts = {},
   --    config = function(_, opts) require 'lsp_signature'.setup(opts) end
   --  },
+  {
+    "sourcegraph/sg.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+
+    -- If you have a recent version of lazy.nvim, you don't need to add this!
+    build = "nvim -l build/init.lua",
+  },
   { 'ray-x/web-tools.nvim' },
-  { 'prettier/vim-prettier' }
+  { 'prettier/vim-prettier' },
+  {
+    'stevearc/oil.nvim',
+    opts = {},
+    -- Optional dependencies
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+  },
+  { 'echasnovski/mini.nvim', version = false },
+  {'VonHeikemen/lsp-zero.nvim', branch = 'v3.x'}
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
   --       Uncomment any of the lines below to enable them.
@@ -316,6 +347,9 @@ require('lazy').setup({
   --    For additional information see: https://github.com/folke/lazy.nvim#-structuring-your-plugins
   -- { import = 'custom.plugins' },
 }, {})
+
+-- Source Graph AI
+require('sg').setup()
 
 -- web-tools -- html server
 require 'web-tools'.setup({
@@ -342,6 +376,10 @@ require('autoclose').setup()
 
 -- autopairs
 require('nvim-autopairs').setup()
+
+-- oil file explorer
+require("oil").setup()
+vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 
 -- lsp-signature
 -- require "lsp_signature".setup()
@@ -379,6 +417,15 @@ vim.keymap.set('n', '<leader>dt', '<cmd>lua require("dapui").toggle()<CR>', { si
 
 -- Mapping for pyright typecheck
 vim.api.nvim_set_keymap('n', '<leader>t', ':CocCommand pyright.organizeimports<CR>', { noremap = true, silent = true })
+
+-- lsp zero
+local lsp_zero = require('lsp-zero')
+
+lsp_zero.on_attach(function(client, bufnr)
+  -- see :help lsp-zero-keybindings
+  -- to learn the available actions
+  lsp_zero.default_keymaps({buffer = bufnr})
+end)
 
 -- Set highlight on search
 vim.o.hlsearch = false
@@ -450,6 +497,14 @@ vim.o.foldenable = true
 -- Using ufo provider need remap `zR` and `zM`. If Neovim is 0.6.1, remap yourself
 vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
 vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
+
+-- tab size to 4
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.expandtab = true
+vim.opt.softtabstop = 4
+vim.opt.autoindent = true
+vim.opt.smartindent = true
 
 -- Option 3: treesitter as a main provider instead
 -- (Note: the `nvim-treesitter` plugin is *not* needed.)
@@ -551,7 +606,7 @@ vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = 
 vim.defer_fn(function()
   require('nvim-treesitter.configs').setup {
     -- Add languages to be installed here that you want installed for treesitter
-    ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'bash' },
+    ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'bash', 'sql' },
 
     -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
     auto_install = false,
@@ -614,6 +669,13 @@ vim.defer_fn(function()
   }
 end, 0)
 
+-- Loading mini modules
+require('mini.comment').setup()
+require('mini.cursorword').setup()
+require('mini.git').setup()
+require('mini.tabline').setup()
+require('mini.icons').setup()
+
 -- [[ Configure LSP ]]
 --  This function gets run when an LSP connects to a particular buffer.
 local on_attach = function(_, bufnr)
@@ -660,15 +722,27 @@ local on_attach = function(_, bufnr)
 end
 
 -- document existing key chains
-require('which-key').register {
-  ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-  ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
-  ['<leader>g'] = { name = '[G]it', _ = 'which_key_ignore' },
-  ['<leader>h'] = { name = 'More git', _ = 'which_key_ignore' },
-  ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
-  ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-  ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-}
+local wk = require("which-key")
+wk.add({
+  { "<leader>f", group = "file" }, -- group
+  { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find File", mode = "n" },
+  { "<leader>fb", function() print("hello") end, desc = "Foobar" },
+  { "<leader>fn", desc = "New File" },
+  { "<leader>f1", hidden = true }, -- hide this keymap
+  { "<leader>w", proxy = "<c-w>", group = "windows" }, -- proxy to window mappings
+  { "<leader>b", group = "buffers", expand = function()
+      return require("which-key.extras").expand.buf()
+    end
+  },
+  {
+    -- Nested mappings are allowed and can be added in any order
+    -- Most attributes can be inherited or overridden on any level
+    -- There's no limit to the depth of nesting
+    mode = { "n", "v" }, -- NORMAL and VISUAL mode
+    { "<leader>w", "<cmd>w<cr>", desc = "Write" },
+  }
+})
+
 
 -- mason-lspconfig requires that these setup functions are called in this order
 -- before setting up the servers.
@@ -684,13 +758,13 @@ require('mason-lspconfig').setup()
 --  If you want to override the default filetypes that your language server will attach to you can
 --  define the property 'filetypes' to the map in question.
 local servers = {
-  -- clangd = {},
-  -- gopls = {},
-  -- pyright = {},
-  -- rust_analyzer = {},
-  -- tsserver = {},
-  -- html = { filetypes = { 'html', 'twig', 'hbs'} },
-
+  clangd = {},
+  gopls = {},
+  pyright = {},
+  rust_analyzer = {},
+  tsserver = {},
+  jsonls = {},
+  html = { filetypes = { 'html', 'twig', 'hbs'} },
   lua_ls = {
     Lua = {
       workspace = { checkThirdParty = false },
@@ -729,12 +803,12 @@ mason_lspconfig.setup_handlers {
 
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
---[[
 
 local cmp = require 'cmp'
 local luasnip = require 'luasnip'
 require('luasnip.loaders.from_vscode').lazy_load()
 luasnip.config.setup {}
+local lspkind = require('lspkind')
 cmp.setup {
   snippet = {
     expand = function(args)
@@ -776,9 +850,33 @@ cmp.setup {
   sources = {
     { name = 'nvim_lsp' },
     { name = 'luasnip' },
+    { name = 'nvim_lsp_signature_help' },
   },
+  formatting = {
+    format = lspkind.cmp_format({
+      mode = 'symbol', -- show only symbol annotations
+      maxwidth = 50, -- prevent the popup from showing more than provided characters (e.g 50 will not show more than 50 characters)
+                     -- can also be a function to dynamically calculate max width such as 
+                     -- maxwidth = function() return math.floor(0.45 * vim.o.columns) end,
+      ellipsis_char = '...', -- when popup menu exceed maxwidth, the truncated part would show ellipsis_char instead (must define maxwidth first)
+      show_labelDetails = true, -- show labelDetails in menu. Disabled by default
+    })
+  }
 }
-]]--
+
+cmp.setup.filetype("sql", {
+  sources = {
+    { name = "vim-dadbod-completion" },
+    { name = "buffer" }
+  }
+})
+
+vim.api.nvim_set_keymap('n', '<leader>db', ':DBUIToggle<CR>', { noremap = true, silent = true })
+
+vim.g.dbs = {
+  practice = 'postgresql://shahab:Gorgi0098@localhost:5432/practice'
+}
+
 vim.opt.foldmethod = "expr"
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 

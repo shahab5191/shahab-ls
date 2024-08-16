@@ -3,5 +3,15 @@
   "python.linting.mypyArgs": [
     "--config-file", "./mypy.ini"
   ],
-  "python.linting.enabled": true
+  "python.linting.enabled": true,
+  "languageserver": {
+    "go": {
+      "command": "gopls",
+      "rootPatterns": ["go.work", "go.mod", ".vim/", ".git/", ".hg/"],
+      "filetypes": ["go"],
+      "initializationOptions": {
+        "usePlaceholders": true
+      }
+    }
+  }
 }
